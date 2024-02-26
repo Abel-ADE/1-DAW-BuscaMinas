@@ -170,9 +170,22 @@ public class VisTeisMinasMenu {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        VisTeisMinasMenu teisMinas = new VisTeisMinasMenu();
-        teisMinas.startNewGame();
-
+        boolean typeText = false;
+        
+        if (args.length>=0) {
+            for (String arg : args) {
+                if (arg.equals("text")) {
+                    typeText = true;
+                }
+            }
+        }
+        
+        if (typeText) {
+            VisTeisMinasMenu teisMinas = new VisTeisMinasMenu();
+            teisMinas.startNewGame();
+        }else{
+            VisTeisMinasWindow.main(args);
+        }
     }
 
 }

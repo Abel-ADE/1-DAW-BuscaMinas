@@ -6,9 +6,8 @@ package visteis.minas;
 
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Image;
+import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -60,44 +59,53 @@ public class VisTeisMinasWindow extends javax.swing.JFrame {
                 JOptionPane.NO_OPTION, JOptionPane.QUESTION_MESSAGE,
                 null, options, options[2]);
 
-        if (option >= 0) {
-            switch (option) {
-                //Nivel de dificultad alto
-                case 0:
-                    game = new Game(HIGHT_CELL, HIGHT_CELL, HIGHT_MINES);
-                    break;
-                //Nivel de dificultad medio
-                case 1:
-                    game = new Game(MEDIUM_CELL, MEDIUM_CELL, MEDIUM_MINES);
-                    break;
-                //Nivel de dificultad baixo
-                case 2:
-                    game = new Game(LOW_CELL, LOW_CELL, LOW_MINES);
-                    break;
-            }
-            //Reseteamos o panel de xogo
-            jPanelBody.removeAll();
-            //Pomos un grid axeitado
-            jPanelBody.setLayout(new GridLayout(game.getRaws(), game.getColumns()));
-
-            cellButtons = new JToggleButton[game.getRaws()][game.getColumns()];
-            //Xeramos os botóns e os almacenamos no array de botóns e os amosamos na pantalla
-            for (int i = 0; i < game.getRaws(); i++) {
-                for (int j = 0; j < game.getColumns(); j++) {
-                    JToggleButton button = new JToggleButton();
-                    button.setName(i + "," + j);
-                    button.addMouseListener(new java.awt.event.MouseAdapter() {
-                        @Override
-                        public void mouseClicked(java.awt.event.MouseEvent evt) {
-                            MouseClicked(evt);
-                        }
-                    });
-                    cellButtons[i][j] = button;
-                    jPanelBody.add(button);
-                }
-            }
-            jPanelBody.updateUI();
+        switch (option) {
+            //Nivel de dificultad alto
+            case 0:
+                game = new Game(HIGHT_CELL, HIGHT_CELL, HIGHT_MINES);
+                break;
+            //Nivel de dificultad medio
+            case 1:
+                game = new Game(MEDIUM_CELL, MEDIUM_CELL, MEDIUM_MINES);
+                break;
+            //Nivel de dificultad baixo
+            case 2:
+                game = new Game(LOW_CELL, LOW_CELL, LOW_MINES);
+                break;
+            default:
+                int raws = game.getRaws();
+                int columns = game.getColumns();
+                int mines = game.getMines();
+                game = new Game(raws, columns, mines);
         }
+        //Reseteamos o panel de xogo
+        jPanelBody.removeAll();
+        //Pomos un grid axeitado
+        jPanelBody.setLayout(new GridLayout(game.getRaws(), game.getColumns()));
+
+        cellButtons = new JToggleButton[game.getRaws()][game.getColumns()];
+        //Xeramos os botóns e os almacenamos no array de botóns e os amosamos na pantalla
+        for (int i = 0; i < game.getRaws(); i++) {
+            for (int j = 0; j < game.getColumns(); j++) {
+                JToggleButton button = new JToggleButton();
+                button.setName(i + "," + j);
+                button.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent evt) {
+                        cellButtonActionPerformed(evt);
+                    }
+                });
+                button.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseClicked(java.awt.event.MouseEvent evt) {
+                        cellButtonMouseClicked(evt);
+                    }
+                });
+                cellButtons[i][j] = button;
+                jPanelBody.add(button);
+            }
+        }
+        jPanelBody.updateUI();
     }
 
     /**
@@ -143,12 +151,13 @@ public class VisTeisMinasWindow extends javax.swing.JFrame {
     }
 
     /**
-     * Captura o evento do ratón sobre os botóns.
+     * Método que captura o clic co botón dereito sobre un JToogleButton do
+     * panel do xogo, marcando ou desmarcando o botón , e modificando o estado
+     * da cela correspondente.
      *
-     * @param evt o evento.
+     * @param evt e evento.
      */
-    private void MouseClicked(java.awt.event.MouseEvent evt) {
-        //System.out.println(evt.paramString());
+    private void cellButtonMouseClicked(java.awt.event.MouseEvent evt) {
         JToggleButton button;
         button = (JToggleButton) evt.getSource();
         int raw = Character.getNumericValue(button.getName().charAt(0));
@@ -156,26 +165,47 @@ public class VisTeisMinasWindow extends javax.swing.JFrame {
 
         Cell cell = game.getCell(raw, column);
 
+        int stateCell = cell.getState();
+
         switch (evt.getButton()) {
-            case 1:
-                switch (cell.getState()) {
-                    case Cell.MARKED:
-                        button.setIcon(null);
-                    default:
-                        openCell(cell);
-                }
-                break;
             case 3:
-                if (cell.getState() != Cell.UNCOVERED) {
-                    if (cell.getState() == Cell.MARKED) {
-                        cell.setState(Cell.UNCOVERED);
-                        button.setIcon(null);
-                    } else {
+                //Botón derecho
+                switch (stateCell) {
+                    case Cell.COVER:
                         cell.setState(Cell.MARKED);
                         button.setIcon(new ImageIcon(getClass().getResource("/visteis/minas/warning.png")));
-                    }
+                        break;
+                    case Cell.MARKED:
+                        cell.setState(Cell.COVER);
+                        button.setIcon(null);
+                        break;
                 }
                 break;
+        }
+    }
+
+    /**
+     * Captura o evento do ratón sobre os botóns.
+     *
+     * @param evt o evento.
+     */
+    private void cellButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        JToggleButton button;
+        button = (JToggleButton) evt.getSource();
+        int raw = Character.getNumericValue(button.getName().charAt(0));
+        int column = Character.getNumericValue(button.getName().charAt(2));
+
+        Cell cell = game.getCell(raw, column);
+
+        int stateCell = cell.getState();
+
+        //Botón izquierdo
+        switch (stateCell) {
+            case Cell.MARKED:
+                button.setIcon(null);
+            default:
+                openCell(cell);
+
         }
     }
 
@@ -186,27 +216,25 @@ public class VisTeisMinasWindow extends javax.swing.JFrame {
      * @param cell
      */
     private void openCell(Cell cell) {
-        //Destapo a cela actual
+        //Abre a celda
         cell.setState(Cell.UNCOVERED);
         //Se ten unha mina
         if (cell.isMined()) {
             game.openAllMines();
-            updatePanel();
-            finishGame("¿Desexas volver a xogar?");
-        //Se non ten unha mina e o número de minas adxacentes é 0
-        } else if (game.getAdjacentMines(cell) == 0) {            
+            //Se non ten unha mina e o número de minas adxacentes é 0
+        } else if (game.getAdjacentMines(cell) == 0) {
             ArrayList<Cell> AdjacentCells = game.getAdjacentCells(cell);
             //Aplico esta misma función a cada unha das celas adxacentes
             for (Cell AdjacentCell : AdjacentCells) {
-                //Sempre e cando a cela non fora aberta antes
-                if (AdjacentCell.getState() != Cell.UNCOVERED) {
+                //Sempre e cando a cela non fora aberta antes ou non estea marcada
+                if (AdjacentCell.getState() != Cell.UNCOVERED && AdjacentCell.getState() != Cell.MARKED) {
                     openCell(AdjacentCell);
                 }
             }
         }
         updatePanel();
-        
-        if (!game.checkCellsToOpen()) {
+
+        if (!game.checkCellsToOpen() || cell.isMined()) {
             finishGame("¿Desexas volver a xogar?");
         }
 
