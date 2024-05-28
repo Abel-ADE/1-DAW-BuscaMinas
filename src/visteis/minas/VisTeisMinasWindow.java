@@ -39,6 +39,7 @@ public class VisTeisMinasWindow extends javax.swing.JFrame {
      */
     public VisTeisMinasWindow() {
         initComponents();
+        setIconImage(new ImageIcon(getClass().getResource("/visteis/minas/bomb.png")).getImage());
         setLocationRelativeTo(null);
         setVisible(true);
         jMenuNewGameActionPerformed(null);
